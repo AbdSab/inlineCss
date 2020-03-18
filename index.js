@@ -27,6 +27,7 @@ const parseNode = node => {
     }
 }
 
+let globalStyle = "";
 const components = fs.readdirSync(HTML_DIR);
 components.forEach(componentFileName => {
     const componentData = fs.readFileSync(`${HTML_DIR}/${componentFileName}`, 'utf-8');
@@ -35,13 +36,18 @@ components.forEach(componentFileName => {
         parseNode(node);
     });
 
-    let rawStyle = "";
+    const componentName = componentFileName.split(".")[0];
+
+    let rawStyle = `/*-------------\n---${componentName} style\n-------------*/\n`;
     Object.entries(styles).forEach(([key, value])=>{
         const attributes = value.style.split(";").filter(e => e !== ';\n');
         rawStyle += `${value.type === 'class' ? '.' : ''}${key} {\n\t${attributes.join(';\n\t')}\n}\n`;
     });
-    const componentName = componentFileName.split(".")[0];
+    globalStyle += rawStyle + "\n"
     !fs.existsSync(`${OUTPUT_DIR}/${componentName}`) && fs.mkdirSync(`${OUTPUT_DIR}/${componentName}`);
     fs.writeFileSync(`${OUTPUT_DIR}/${componentName}/${componentName}.css`, rawStyle);
     fs.writeFileSync(`${OUTPUT_DIR}/${componentName}/${componentName}.html`, root.outerHTML);
 });
+
+!fs.existsSync(`${OUTPUT_DIR}/css`) && fs.mkdirSync(`${OUTPUT_DIR}/css`);
+fs.writeFileSync(`${OUTPUT_DIR}/css/style.css`, globalStyle);
